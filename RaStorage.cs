@@ -8,6 +8,7 @@ namespace RaStorages
 	public class RaStorage
 	{
 		private const string COUNT_KEY = "_Count";
+		private const string INDEX_SEPARATOR = "_";
 
 		public string Id
 		{
@@ -26,52 +27,62 @@ namespace RaStorages
 
 		public void Save(string key, int value)
 		{
-			PlayerPrefs.SetInt(GetPlayerPrefsKey(key), value);
+			string playerPrefsKey = GetPlayerPrefsKey(key);
+			PlayerPrefs.SetInt(playerPrefsKey, value);
 		}
 
 		public int Load(string key, int defaultValue)
 		{
-			return PlayerPrefs.GetInt(GetPlayerPrefsKey(key), defaultValue);
+			string playerPrefsKey = GetPlayerPrefsKey(key);
+			return PlayerPrefs.GetInt(playerPrefsKey, defaultValue);
 		}
 
 		public void Save(string key, float value)
 		{
-			PlayerPrefs.SetFloat(GetPlayerPrefsKey(key), value);
+			string playerPrefsKey = GetPlayerPrefsKey(key);
+			PlayerPrefs.SetFloat(playerPrefsKey, value);
 		}
 
 		public float Load(string key, float defaultValue)
 		{
-			return PlayerPrefs.GetFloat(GetPlayerPrefsKey(key), defaultValue);
+			string playerPrefsKey = GetPlayerPrefsKey(key);
+			return PlayerPrefs.GetFloat(playerPrefsKey, defaultValue);
 		}
 
 		public void Save(string key, string value)
 		{
-			PlayerPrefs.SetString(GetPlayerPrefsKey(key), value);
+			string playerPrefsKey = GetPlayerPrefsKey(key);
+			PlayerPrefs.SetString(playerPrefsKey, value);
 		}
 
 		public string Load(string key, string defaultValue)
 		{
-			return PlayerPrefs.GetString(GetPlayerPrefsKey(key), defaultValue);
+			string playerPrefsKey = GetPlayerPrefsKey(key);
+			return PlayerPrefs.GetString(playerPrefsKey, defaultValue);
 		}
 
 		public void Save(string key, bool value)
 		{
-			PlayerPrefs.SetInt(GetPlayerPrefsKey(key), value ? 1 : 0);
+			string playerPrefsKey = GetPlayerPrefsKey(key);
+			PlayerPrefs.SetInt(playerPrefsKey, value ? 1 : 0);
 		}
 
 		public bool Load(string key, bool defaultValue)
 		{
-			return PlayerPrefs.GetInt(GetPlayerPrefsKey(key), defaultValue ? 1 : 0) == 1;
+			string playerPrefsKey = GetPlayerPrefsKey(key);
+			return PlayerPrefs.GetInt(playerPrefsKey, defaultValue ? 1 : 0) == 1;
 		}
 
 		public void Save<T>(string key, T value) where T : IRaStorable
 		{
-			PlayerPrefs.SetString(GetPlayerPrefsKey(key), value.Serialize());
+			string playerPrefsKey = GetPlayerPrefsKey(key);
+			PlayerPrefs.SetString(playerPrefsKey, value.Serialize());
 		}
 
 		public T Load<T>(string key, Func<string, T> deserialize) where T : IRaStorable
 		{
-			string serializedData = PlayerPrefs.GetString(GetPlayerPrefsKey(key), string.Empty);
+			string playerPrefsKey = GetPlayerPrefsKey(key);
+			string serializedData = PlayerPrefs.GetString(playerPrefsKey, string.Empty);
 			if(!string.IsNullOrEmpty(serializedData))
 			{
 				return deserialize(serializedData);
@@ -81,25 +92,35 @@ namespace RaStorages
 
 		public void Save<T>(string key, T[] values) where T : IRaStorable
 		{
-			ClearArrayKeys(key, values.Length);
+			string playerPrefsKey = GetPlayerPrefsKey(key);
+			ClearArrayKeys(playerPrefsKey, values.Length);
 
-			PlayerPrefs.SetInt(GetPlayerPrefsKey(key) + COUNT_KEY, values.Length);
+			PlayerPrefs.SetInt(playerPrefsKey + COUNT_KEY, values.Length);
 			for(int i = 0; i < values.Length; i++)
 			{
-				PlayerPrefs.SetString(GetPlayerPrefsKey(key) + "_" + i, values[i].Serialize());
+				PlayerPrefs.SetString(playerPrefsKey + INDEX_SEPARATOR + i, values[i].Serialize());
 			}
 		}
 
 		public T[] LoadArray<T>(string key, Func<string, T> deserialize) where T : IRaStorable
 		{
-			int count = PlayerPrefs.GetInt(GetPlayerPrefsKey(key) + COUNT_KEY, 0);
+			string playerPrefsKey = GetPlayerPrefsKey(key);
+			int count = PlayerPrefs.GetInt(playerPrefsKey + COUNT_KEY, 0);
 			List<T> values = new List<T>();
 			for(int i = 0; i < count; i++)
 			{
-				string serializedData = PlayerPrefs.GetString(GetPlayerPrefsKey(key) + "_" + i, string.Empty);
+				string serializedData = PlayerPrefs.GetString(playerPrefsKey + INDEX_SEPARATOR + i, string.Empty);
 				if(!string.IsNullOrEmpty(serializedData))
 				{
-					values.Add(deserialize(serializedData));
+					try
+					{
+						T value = deserialize(serializedData);
+						values.Add(value);
+					}
+					catch(Exception e)
+					{
+						Debug.LogWarning($"RaStorage - Could not Deserialize Key {key} under index {i}. Error: " + e?.Message + " | " + e.InnerException?.Message);
+					}
 				}
 			}
 			return values.ToArray();
@@ -107,13 +128,15 @@ namespace RaStorages
 
 		public void Save(string key, DateTime value)
 		{
+			string playerPrefsKey = GetPlayerPrefsKey(key);
 			long binaryDate = value.ToBinary();
-			PlayerPrefs.SetString(GetPlayerPrefsKey(key), binaryDate.ToString(CultureInfo.InvariantCulture));
+			PlayerPrefs.SetString(playerPrefsKey, binaryDate.ToString(CultureInfo.InvariantCulture));
 		}
 
 		public DateTime Load(string key, DateTime defaultValue)
 		{
-			string binaryString = PlayerPrefs.GetString(GetPlayerPrefsKey(key), string.Empty);
+			string playerPrefsKey = GetPlayerPrefsKey(key);
+			string binaryString = PlayerPrefs.GetString(playerPrefsKey, string.Empty);
 			if(!string.IsNullOrEmpty(binaryString))
 			{
 				long binaryDate;
@@ -127,20 +150,22 @@ namespace RaStorages
 
 		public void Save(string key, Vector3 value)
 		{
-			PlayerPrefs.SetFloat(GetPlayerPrefsKey(key) + "_x", value.x);
-			PlayerPrefs.SetFloat(GetPlayerPrefsKey(key) + "_y", value.y);
-			PlayerPrefs.SetFloat(GetPlayerPrefsKey(key) + "_z", value.z);
+			string playerPrefsKey = GetPlayerPrefsKey(key);
+			PlayerPrefs.SetFloat(playerPrefsKey + "_x", value.x);
+			PlayerPrefs.SetFloat(playerPrefsKey + "_y", value.y);
+			PlayerPrefs.SetFloat(playerPrefsKey + "_z", value.z);
 		}
 
 		public Vector3 Load(string key, Vector3 defaultValue)
 		{
-			if(PlayerPrefs.HasKey(GetPlayerPrefsKey(key) + "_x") &&
-				PlayerPrefs.HasKey(GetPlayerPrefsKey(key) + "_y") &&
-				PlayerPrefs.HasKey(GetPlayerPrefsKey(key) + "_z"))
+			string playerPrefsKey = GetPlayerPrefsKey(key);
+			if(PlayerPrefs.HasKey(playerPrefsKey + "_x") &&
+				PlayerPrefs.HasKey(playerPrefsKey + "_y") &&
+				PlayerPrefs.HasKey(playerPrefsKey + "_z"))
 			{
-				float x = PlayerPrefs.GetFloat(GetPlayerPrefsKey(key) + "_x");
-				float y = PlayerPrefs.GetFloat(GetPlayerPrefsKey(key) + "_y");
-				float z = PlayerPrefs.GetFloat(GetPlayerPrefsKey(key) + "_z");
+				float x = PlayerPrefs.GetFloat(playerPrefsKey + "_x");
+				float y = PlayerPrefs.GetFloat(playerPrefsKey + "_y");
+				float z = PlayerPrefs.GetFloat(playerPrefsKey + "_z");
 				return new Vector3(x, y, z);
 			}
 			return defaultValue;
@@ -148,23 +173,27 @@ namespace RaStorages
 
 		public void Save(string key, Color value)
 		{
-			PlayerPrefs.SetFloat(GetPlayerPrefsKey(key) + "_r", value.r);
-			PlayerPrefs.SetFloat(GetPlayerPrefsKey(key) + "_g", value.g);
-			PlayerPrefs.SetFloat(GetPlayerPrefsKey(key) + "_b", value.b);
-			PlayerPrefs.SetFloat(GetPlayerPrefsKey(key) + "_a", value.a);
+			string playerPrefsKey = GetPlayerPrefsKey(key);
+			PlayerPrefs.SetFloat(playerPrefsKey + "_r", value.r);
+			PlayerPrefs.SetFloat(playerPrefsKey +
+
+ "_g", value.g);
+			PlayerPrefs.SetFloat(playerPrefsKey + "_b", value.b);
+			PlayerPrefs.SetFloat(playerPrefsKey + "_a", value.a);
 		}
 
 		public Color Load(string key, Color defaultValue)
 		{
-			if(PlayerPrefs.HasKey(GetPlayerPrefsKey(key) + "_r") &&
-				PlayerPrefs.HasKey(GetPlayerPrefsKey(key) + "_g") &&
-				PlayerPrefs.HasKey(GetPlayerPrefsKey(key) + "_b") &&
-				PlayerPrefs.HasKey(GetPlayerPrefsKey(key) + "_a"))
+			string playerPrefsKey = GetPlayerPrefsKey(key);
+			if(PlayerPrefs.HasKey(playerPrefsKey + "_r") &&
+				PlayerPrefs.HasKey(playerPrefsKey + "_g") &&
+				PlayerPrefs.HasKey(playerPrefsKey + "_b") &&
+				PlayerPrefs.HasKey(playerPrefsKey + "_a"))
 			{
-				float r = PlayerPrefs.GetFloat(GetPlayerPrefsKey(key) + "_r");
-				float g = PlayerPrefs.GetFloat(GetPlayerPrefsKey(key) + "_g");
-				float b = PlayerPrefs.GetFloat(GetPlayerPrefsKey(key) + "_b");
-				float a = PlayerPrefs.GetFloat(GetPlayerPrefsKey(key) + "_a");
+				float r = PlayerPrefs.GetFloat(playerPrefsKey + "_r");
+				float g = PlayerPrefs.GetFloat(playerPrefsKey + "_g");
+				float b = PlayerPrefs.GetFloat(playerPrefsKey + "_b");
+				float a = PlayerPrefs.GetFloat(playerPrefsKey + "_a");
 				return new Color(r, g, b, a);
 			}
 			return defaultValue;
@@ -172,17 +201,20 @@ namespace RaStorages
 
 		public void Save(string key, int[] values)
 		{
-			ClearArrayKeys(key, values.Length);
-			PlayerPrefs.SetInt(GetPlayerPrefsKey(key) + COUNT_KEY, values.Length);
+			string playerPrefsKey = GetPlayerPrefsKey(key);
+			ClearArrayKeys(playerPrefsKey, values.Length);
+
+			PlayerPrefs.SetInt(playerPrefsKey + COUNT_KEY, values.Length);
 			for(int i = 0; i < values.Length; i++)
 			{
-				PlayerPrefs.SetInt(GetPlayerPrefsKey(key) + "_" + i, values[i]);
+				PlayerPrefs.SetInt(playerPrefsKey + INDEX_SEPARATOR + i, values[i]);
 			}
 		}
 
 		public int[] LoadArray(string key, int[] defaultValues)
 		{
-			int count = PlayerPrefs.GetInt(GetPlayerPrefsKey(key) + "_Count", -1);
+			string playerPrefsKey = GetPlayerPrefsKey(key);
+			int count = PlayerPrefs.GetInt(playerPrefsKey + COUNT_KEY, -1);
 
 			if(count == -1)
 				return defaultValues;
@@ -190,9 +222,10 @@ namespace RaStorages
 			List<int> values = new List<int>();
 			for(int i = 0; i < count; i++)
 			{
-				if(PlayerPrefs.HasKey(GetPlayerPrefsKey(key) + "_" + i))
+				string indexKey = playerPrefsKey + INDEX_SEPARATOR + i;
+				if(PlayerPrefs.HasKey(indexKey))
 				{
-					values.Add(PlayerPrefs.GetInt(GetPlayerPrefsKey(key) + "_" + i));
+					values.Add(PlayerPrefs.GetInt(indexKey));
 				}
 				else
 				{
@@ -204,26 +237,31 @@ namespace RaStorages
 
 		public void Save(string key, float[] values)
 		{
-			ClearArrayKeys(key, values.Length);
-			PlayerPrefs.SetInt(GetPlayerPrefsKey(key) + COUNT_KEY, values.Length);
+			string playerPrefsKey = GetPlayerPrefsKey(key);
+			ClearArrayKeys(playerPrefsKey, values.Length);
+
+			PlayerPrefs.SetInt(playerPrefsKey + COUNT_KEY, values.Length);
 			for(int i = 0; i < values.Length; i++)
 			{
-				PlayerPrefs.SetFloat(GetPlayerPrefsKey(key) + "_" + i, values[i]);
+				PlayerPrefs.SetFloat(playerPrefsKey + INDEX_SEPARATOR + i, values[i]);
 			}
 		}
 
 		public float[] LoadArray(string key, float[] defaultValues)
 		{
-			int count = PlayerPrefs.GetInt(GetPlayerPrefsKey(key) + "_Count", -1);
+			string playerPrefsKey = GetPlayerPrefsKey(key);
+			int count = PlayerPrefs.GetInt(playerPrefsKey + COUNT_KEY, -1);
+
 			if(count == -1)
 				return defaultValues;
 
 			List<float> values = new List<float>();
 			for(int i = 0; i < count; i++)
 			{
-				if(PlayerPrefs.HasKey(GetPlayerPrefsKey(key) + "_" + i))
+				string indexKey = playerPrefsKey + INDEX_SEPARATOR + i;
+				if(PlayerPrefs.HasKey(indexKey))
 				{
-					values.Add(PlayerPrefs.GetFloat(GetPlayerPrefsKey(key) + "_" + i));
+					values.Add(PlayerPrefs.GetFloat(indexKey));
 				}
 				else
 				{
@@ -233,28 +271,33 @@ namespace RaStorages
 			return values.ToArray();
 		}
 
-
 		public void Save(string key, string[] values)
 		{
-			ClearArrayKeys(key, values.Length);
-			PlayerPrefs.SetInt(GetPlayerPrefsKey(key) + COUNT_KEY, values.Length);
+			string playerPrefsKey = GetPlayerPrefsKey(key);
+			ClearArrayKeys(playerPrefsKey, values.Length);
+
+			PlayerPrefs.SetInt(playerPrefsKey + COUNT_KEY, values.Length);
 			for(int i = 0; i < values.Length; i++)
 			{
-				PlayerPrefs.SetString(GetPlayerPrefsKey(key) + "_" + i, values[i]);
+				PlayerPrefs.SetString(playerPrefsKey + INDEX_SEPARATOR + i, values[i]);
 			}
 		}
+
 		public string[] LoadArray(string key, string[] defaultValues)
 		{
-			int count = PlayerPrefs.GetInt(GetPlayerPrefsKey(key) + "_Count", -1);
+			string playerPrefsKey = GetPlayerPrefsKey(key);
+			int count = PlayerPrefs.GetInt(playerPrefsKey + COUNT_KEY, -1);
+
 			if(count == -1)
 				return defaultValues;
 
 			List<string> values = new List<string>();
 			for(int i = 0; i < count; i++)
 			{
-				if(PlayerPrefs.HasKey(GetPlayerPrefsKey(key) + "_" + i))
+				string indexKey = playerPrefsKey + INDEX_SEPARATOR + i;
+				if(PlayerPrefs.HasKey(indexKey))
 				{
-					values.Add(PlayerPrefs.GetString(GetPlayerPrefsKey(key) + "_" + i));
+					values.Add(PlayerPrefs.GetString(indexKey));
 				}
 				else
 				{
@@ -266,26 +309,31 @@ namespace RaStorages
 
 		public void Save(string key, bool[] values)
 		{
-			ClearArrayKeys(key, values.Length);
-			PlayerPrefs.SetInt(GetPlayerPrefsKey(key) + COUNT_KEY, values.Length);
+			string playerPrefsKey = GetPlayerPrefsKey(key);
+			ClearArrayKeys(playerPrefsKey, values.Length);
+
+			PlayerPrefs.SetInt(playerPrefsKey + COUNT_KEY, values.Length);
 			for(int i = 0; i < values.Length; i++)
 			{
-				PlayerPrefs.SetInt(GetPlayerPrefsKey(key) + "_" + i, values[i] ? 1 : 0);
+				PlayerPrefs.SetInt(playerPrefsKey + INDEX_SEPARATOR + i, values[i] ? 1 : 0);
 			}
 		}
 
 		public bool[] LoadArray(string key, bool[] defaultValues)
 		{
-			int count = PlayerPrefs.GetInt(GetPlayerPrefsKey(key) + "_Count", -1);
+			string playerPrefsKey = GetPlayerPrefsKey(key);
+			int count = PlayerPrefs.GetInt(playerPrefsKey + COUNT_KEY, -1);
+
 			if(count == -1)
 				return defaultValues;
 
 			List<bool> values = new List<bool>();
 			for(int i = 0; i < count; i++)
 			{
-				if(PlayerPrefs.HasKey(GetPlayerPrefsKey(key) + "_" + i))
+				string indexKey = playerPrefsKey + INDEX_SEPARATOR + i;
+				if(PlayerPrefs.HasKey(indexKey))
 				{
-					values.Add(PlayerPrefs.GetInt(GetPlayerPrefsKey(key) + "_" + i) == 1);
+					values.Add(PlayerPrefs.GetInt(indexKey) == 1);
 				}
 				else
 				{
@@ -295,12 +343,13 @@ namespace RaStorages
 			return values.ToArray();
 		}
 
-		private void ClearArrayKeys(string key, int newLength)
+
+		private void ClearArrayKeys(string playerPrefsKey, int newLength)
 		{
-			int oldCount = PlayerPrefs.GetInt(GetPlayerPrefsKey(key) + COUNT_KEY, 0);
+			int oldCount = PlayerPrefs.GetInt(playerPrefsKey + COUNT_KEY, 0);
 			for(int i = newLength; i < oldCount; i++)
 			{
-				PlayerPrefs.DeleteKey(GetPlayerPrefsKey(key) + "_" + i);
+				PlayerPrefs.DeleteKey(playerPrefsKey + INDEX_SEPARATOR + i);
 			}
 		}
 
