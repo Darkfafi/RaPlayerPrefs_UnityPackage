@@ -79,7 +79,7 @@ namespace RaStorages
 			PlayerPrefs.SetString(playerPrefsKey, value.Serialize());
 		}
 
-		public T Load<T>(string key, Func<string, T> deserialize) where T : IRaStorable
+		public T Load<T>(string key, Func<string, T> deserialize, Func<T> defaultValue) where T : IRaStorable
 		{
 			string playerPrefsKey = GetPlayerPrefsKey(key);
 			string serializedData = PlayerPrefs.GetString(playerPrefsKey, string.Empty);
@@ -87,7 +87,7 @@ namespace RaStorages
 			{
 				return deserialize(serializedData);
 			}
-			return default;
+			return defaultValue();
 		}
 
 		public void Save<T>(string key, T[] values) where T : IRaStorable
@@ -353,7 +353,7 @@ namespace RaStorages
 			}
 		}
 
-		public void WriteToDisk()
+		public static void WriteToDisk()
 		{
 			PlayerPrefs.Save();
 		}
