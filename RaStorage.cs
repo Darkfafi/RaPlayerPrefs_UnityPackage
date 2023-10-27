@@ -95,11 +95,21 @@ namespace RaStorages
 			string playerPrefsKey = GetPlayerPrefsKey(key);
 			ClearArrayKeys(playerPrefsKey, values.Length);
 
-			PlayerPrefs.SetInt(playerPrefsKey + COUNT_KEY, values.Length);
+			int serializationCount = 0;
 			for(int i = 0; i < values.Length; i++)
 			{
-				PlayerPrefs.SetString(playerPrefsKey + INDEX_SEPARATOR + i, values[i].Serialize());
+				try
+				{
+					string json = values[i].Serialize();
+					PlayerPrefs.SetString(playerPrefsKey + INDEX_SEPARATOR + serializationCount, json);
+					serializationCount++;
+				}
+				catch(Exception e)
+				{
+					Debug.LogError($"{nameof(RaStorage)} - {key} could not serialize value {i}. Message: {e.Message}");
+				}
 			}
+			PlayerPrefs.SetInt(playerPrefsKey + COUNT_KEY, serializationCount);
 		}
 
 		public T[] LoadArray<T>(string key, Func<string, T> deserialize) where T : IRaStorable
@@ -119,7 +129,7 @@ namespace RaStorages
 					}
 					catch(Exception e)
 					{
-						Debug.LogWarning($"RaStorage - Could not Deserialize Key {key} under index {i}. Error: " + e?.Message + " | " + e.InnerException?.Message);
+						Debug.LogError($"RaStorage - Could not Deserialize Key {key} under index {i}. Error: " + e?.Message + " | " + e.InnerException?.Message);
 					}
 				}
 			}
