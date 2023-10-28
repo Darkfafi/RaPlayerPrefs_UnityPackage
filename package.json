@@ -1,9 +1,9 @@
 {
-  "name": "rasofiagames.rastorage",
-  "displayName": "RaStorage",
+  "name": "rasofiagames.rastorageprefs",
+  "displayName": "RaStoragePrefs",
   "version": "1.0.0",
   "unity": "2019.4",
-  "description": "RaStorage is a storage system built on top of PlayerPrefs to serialize various DataTypes with ease under unique keys.",
+  "description": "RaStoragePrefs is a storage system built on top of PlayerPrefs to serialize various DataTypes with ease under unique keys.",
   "keywords": [
     "Serialization",
     "Deserialization",

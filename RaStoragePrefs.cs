@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Globalization;
 using UnityEngine;
 
-namespace RaStorages
+namespace RaStoragePrefsSystem
 {
-	public class RaStorage
+	public class RaStoragePrefs
 	{
 		private const string COUNT_KEY = "_Count";
 		private const string INDEX_SEPARATOR = "_";
@@ -15,7 +15,7 @@ namespace RaStorages
 			get; private set;
 		}
 
-		public RaStorage(string id)
+		public RaStoragePrefs(string id)
 		{
 			Id = id;
 		}
@@ -73,13 +73,13 @@ namespace RaStorages
 			return PlayerPrefs.GetInt(playerPrefsKey, defaultValue ? 1 : 0) == 1;
 		}
 
-		public void Save<T>(string key, T value) where T : IRaStorable
+		public void Save<T>(string key, T value) where T : IRaStorablePref
 		{
 			string playerPrefsKey = GetPlayerPrefsKey(key);
 			PlayerPrefs.SetString(playerPrefsKey, value.Serialize());
 		}
 
-		public T Load<T>(string key, Func<string, T> deserialize, Func<T> defaultValue) where T : IRaStorable
+		public T Load<T>(string key, Func<string, T> deserialize, Func<T> defaultValue) where T : IRaStorablePref
 		{
 			string playerPrefsKey = GetPlayerPrefsKey(key);
 			string serializedData = PlayerPrefs.GetString(playerPrefsKey, string.Empty);
@@ -90,7 +90,7 @@ namespace RaStorages
 			return defaultValue();
 		}
 
-		public void Save<T>(string key, T[] values) where T : IRaStorable
+		public void Save<T>(string key, T[] values) where T : IRaStorablePref
 		{
 			string playerPrefsKey = GetPlayerPrefsKey(key);
 			ClearArrayKeys(playerPrefsKey, values.Length);
@@ -106,13 +106,13 @@ namespace RaStorages
 				}
 				catch(Exception e)
 				{
-					Debug.LogError($"{nameof(RaStorage)} - {key} could not serialize value {i}. Message: {e.Message}");
+					Debug.LogError($"{nameof(RaStoragePrefs)} - {key} could not serialize value {i}. Message: {e.Message}");
 				}
 			}
 			PlayerPrefs.SetInt(playerPrefsKey + COUNT_KEY, serializationCount);
 		}
 
-		public T[] LoadArray<T>(string key, Func<string, T> deserialize) where T : IRaStorable
+		public T[] LoadArray<T>(string key, Func<string, T> deserialize) where T : IRaStorablePref
 		{
 			string playerPrefsKey = GetPlayerPrefsKey(key);
 			int count = PlayerPrefs.GetInt(playerPrefsKey + COUNT_KEY, 0);
@@ -185,9 +185,7 @@ namespace RaStorages
 		{
 			string playerPrefsKey = GetPlayerPrefsKey(key);
 			PlayerPrefs.SetFloat(playerPrefsKey + "_r", value.r);
-			PlayerPrefs.SetFloat(playerPrefsKey +
-
- "_g", value.g);
+			PlayerPrefs.SetFloat(playerPrefsKey + "_g", value.g);
 			PlayerPrefs.SetFloat(playerPrefsKey + "_b", value.b);
 			PlayerPrefs.SetFloat(playerPrefsKey + "_a", value.a);
 		}
