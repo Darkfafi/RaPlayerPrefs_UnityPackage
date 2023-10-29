@@ -73,13 +73,13 @@ namespace RaStoragePrefsSystem
 			return PlayerPrefs.GetInt(playerPrefsKey, defaultValue ? 1 : 0) == 1;
 		}
 
-		public void Save<T>(string key, T value) where T : IRaStorablePref
+		public void Save<T>(string key, T value) where T : IRaPrefObject
 		{
 			string playerPrefsKey = GetPlayerPrefsKey(key);
 			PlayerPrefs.SetString(playerPrefsKey, value.Serialize());
 		}
 
-		public T Load<T>(string key, Func<string, T> deserialize, Func<T> defaultValue) where T : IRaStorablePref
+		public T Load<T>(string key, Func<string, T> deserialize, Func<T> defaultValue) where T : IRaPrefObject
 		{
 			string playerPrefsKey = GetPlayerPrefsKey(key);
 			string serializedData = PlayerPrefs.GetString(playerPrefsKey, string.Empty);
@@ -90,7 +90,7 @@ namespace RaStoragePrefsSystem
 			return defaultValue();
 		}
 
-		public void Save<T>(string key, T[] values) where T : IRaStorablePref
+		public void Save<T>(string key, T[] values) where T : IRaPrefObject
 		{
 			string playerPrefsKey = GetPlayerPrefsKey(key);
 			ClearArrayKeys(playerPrefsKey, values.Length);
@@ -112,7 +112,7 @@ namespace RaStoragePrefsSystem
 			PlayerPrefs.SetInt(playerPrefsKey + COUNT_KEY, serializationCount);
 		}
 
-		public T[] LoadArray<T>(string key, Func<string, T> deserialize) where T : IRaStorablePref
+		public T[] LoadArray<T>(string key, Func<string, T> deserialize) where T : IRaPrefObject
 		{
 			string playerPrefsKey = GetPlayerPrefsKey(key);
 			int count = PlayerPrefs.GetInt(playerPrefsKey + COUNT_KEY, 0);

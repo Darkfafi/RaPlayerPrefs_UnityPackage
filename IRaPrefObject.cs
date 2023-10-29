@@ -1,6 +1,6 @@
 ﻿namespace RaStoragePrefsSystem
 {
-	public interface IRaStorablePref
+	public interface IRaPrefObject
 	{
 		string Serialize();
 	}
